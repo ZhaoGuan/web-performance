@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Web性能报告</title>
-    <!-- import CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css"/>
 </head>
 <body>
 <div id="app">
@@ -21,9 +20,7 @@
     </el-row>
 </div>
 </body>
-<!-- import Vue before Element -->
 <script src="https://unpkg.zhimg.com/vue/dist/vue.js"></script>
-<!-- import JavaScript -->
 <script src="https://unpkg.zhimg.com/element-ui/lib/index.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/echarts@5.3.2/dist/echarts.min.js"></script>
 <script>
@@ -61,11 +58,10 @@
             }
             this.fpsChart()
             this.memoryChart()
-            this.fpsChart()
-            this.memoryChart()
         },
         watch: {},
-        computed: {},
+        computed: {
+        },
         methods: {
             fpsChart() {
                 const chartDom = document.getElementById("fps");
