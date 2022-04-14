@@ -78,8 +78,8 @@ function LoadPerformanceTest() {
                 message.push('average page First Contentful Paint (ms)' + (state.firstContentfulPaint / state.loadCount))
                 message = message.join("\n") + "\n";
                 downloadFileHelper("LoadPerformanceResult.txt", message)
-                chrome.storage.local.set({loadIsRunning: false});
                 localStorage.setItem('LoadPerformanceTest', 'false')
+                localStorage.setItem('loadIsRunning', 'false')
                 state = {}
             }
 
@@ -176,7 +176,9 @@ window.addEventListener("setItemEvent", function (event) {
                 runningPerformance: newValue,
             });
         }
-
+    }
+    if (key === "loadIsRunning" && newValue === false) {
+        chrome.storage.local.set({loadIsRunning: false});
     }
 });
 window.onclose = function () {
@@ -196,17 +198,16 @@ var doLoadPerformanceTest = doLoadPerformanceTest || (() => {
             localStorage.setItem('performanceTesting', JSON.stringify({}));
             // 设置执行
             localStorage.setItem('LoadPerformanceTest', 'true')
+            localStorage.setItem('loadIsRunning', 'true')
             // 重新载入页面
             location.reload()
         }
         // 执行运行中性能
         if (request.action === 'RunningPerformance') {
-            // 清空数据
             localStorage.setItem('RunningPerformanceTest', 'true');
         }
         // 关闭运行中性能
         if (request.action === 'StopRunningPerformance') {
-            // 清空数据
             localStorage.setItem('RunningPerformanceTest', 'false');
             chrome.storage.local.get(['totalRunningPerformance'], function (result) {
                 const data = result.totalRunningPerformance
