@@ -2,17 +2,6 @@
 var loadIsRunning = false
 var runningPerformanceIsRunning = false
 
-chrome.devtools.network.onRequestFinished.addListener(
-    (request) => {
-        if (!Object.keys(request).includes("_fromCache") && request.request.httpVersion !== "chrome-extension") {
-            console.log("Net Work")
-            console.log(request)
-            chrome.storage.local.set({
-                netWork: request
-            });
-        }
-    }
-);
 
 chrome.storage.onChanged.addListener((changes) => {
     for (let [key, {newValue}] of Object.entries(changes)) {

@@ -49,9 +49,6 @@ export default {
     );
     chrome.storage.onChanged.addListener((changes) => {
       for (let [key, {newValue}] of Object.entries(changes)) {
-        if (key === "netWork") {
-          console.log(newValue)
-        }
         if (key === "runningPerformance" && newValue === null) {
           chrome.storage.local.get(['totalRunningPerformance'], function (result) {
             const data = result.totalRunningPerformance
@@ -78,13 +75,13 @@ export default {
                 "    </el-row>\n" +
                 "</div>\n" +
                 "</body>\n" +
-                "<script src=\"https://unpkg.zhimg.com/vue/dist/vue.js\">" +
+                "<script src=\"https://unpkg.zhimg.com/vue/web-performance/vue.js\">" +
                 // eslint-disable-next-line
                 `<\/script>\n` +
                 "<script src=\"https://unpkg.zhimg.com/element-ui/lib/index.js\">" +
                 // eslint-disable-next-line
                 `<\/script>\n` +
-                "<script src=\"https://cdn.jsdelivr.net/npm/echarts@5.3.2/dist/echarts.min.js\">" +
+                "<script src=\"https://cdn.jsdelivr.net/npm/echarts@5.3.2/web-performance/echarts.min.js\">" +
                 // eslint-disable-next-line
                 `<\/script>\n` +
                 " <script>\n" +
