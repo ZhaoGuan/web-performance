@@ -78,9 +78,8 @@ function LoadPerformanceTest() {
                 message.push('average page First Contentful Paint (ms)' + (state.firstContentfulPaint / state.loadCount))
                 message = message.join("\n") + "\n";
                 downloadFileHelper("LoadPerformanceResult.txt", message)
-                console.log(message)
-                localStorage.setItem('LoadPerformanceTest', 'false')
                 chrome.storage.local.set({loadIsRunning: false});
+                localStorage.setItem('LoadPerformanceTest', 'false')
                 state = {}
             }
 

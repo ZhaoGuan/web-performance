@@ -35,18 +35,12 @@ export default {
     }
   },
   mounted() {
-    chrome.runtime.onMessage.addListener((request) => {
-          if (request.msg === "isRunning") {
-            this.isRunning = request.data
-          }
-          if (request.msg === "loadIsRunning") {
-            this.loadIsRunning = request.data
-          }
-          if (request.msg === "runningPerformanceIsRunning") {
-            this.runningPerformanceIsRunning = request.data
-          }
-        }
-    );
+    chrome.storage.local.get(["loadIsRunning"], (result) => {
+      this.loadIsRunning = !!result.loadIsRunning;
+    })
+    chrome.storage.local.get(["runningPerformanceIsRunning"], (result) => {
+      this.runningPerformanceIsRunning = !!result.runningPerformanceIsRunning;
+    })
     chrome.storage.onChanged.addListener((changes) => {
       for (let [key, {newValue}] of Object.entries(changes)) {
         if (key === "runningPerformance" && newValue === null) {
@@ -75,13 +69,13 @@ export default {
                 "    </el-row>\n" +
                 "</div>\n" +
                 "</body>\n" +
-                "<script src=\"https://unpkg.zhimg.com/vue/web-performance/vue.js\">" +
+                "<script src=\"https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.min.js\">" +
                 // eslint-disable-next-line
                 `<\/script>\n` +
-                "<script src=\"https://unpkg.zhimg.com/element-ui/lib/index.js\">" +
+                "<script src=\"https://cdn.jsdelivr.net/npm/element-ui@2.4.5/lib/element-ui.common.min.js\">" +
                 // eslint-disable-next-line
                 `<\/script>\n` +
-                "<script src=\"https://cdn.jsdelivr.net/npm/echarts@5.3.2/web-performance/echarts.min.js\">" +
+                "<script src=\"https://cdn.jsdelivr.net/npm/echarts@5.3.2/dist/echarts.min.js\">" +
                 // eslint-disable-next-line
                 `<\/script>\n` +
                 " <script>\n" +
@@ -256,6 +250,12 @@ export default {
             downloadFileHelper("RunningPerformanceResult.html", template)
             chrome.storage.local.set({totalRunningPerformance: null, runningPerformance: null});
           })
+        }
+        if (key === "loadIsRunning" && newValue !== null) {
+          this.loadIsRunning = newValue
+        }
+        if (key === "runningPerformanceIsRunning" && newValue !== null) {
+          this.runningPerformanceIsRunning = newValue
         }
         this.isRunning = (key === 'runningPerformance' || key === 'totalRunningPerformance') && newValue !== null
       }
