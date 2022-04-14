@@ -1,3 +1,18 @@
+function downloadFileHelper(fileName, content) {
+    const aTag = document.createElement('a');
+    const blob = new Blob([content]);
+    aTag.download = fileName;
+    aTag.style = "display: none";
+    aTag.href = URL.createObjectURL(blob);
+    document.body.appendChild(aTag);
+    aTag.click();
+    setTimeout(function () {
+        document.body.removeChild(aTag);
+        window.URL.revokeObjectURL(blob);
+    }, 100);
+}
+
+
 function LoadPerformanceTest() {
     var maxReloads = 10;
     var state;
@@ -43,6 +58,8 @@ function LoadPerformanceTest() {
         if (localStorage.getItem("LoadPerformanceTest") === 'true') {
             if (state.loadCount < maxReloads) {
                 setTimeout(function () {
+                    const time = new Date()
+                    chrome.storage.local.set({reload: time});
                     location.reload();
                 }, 1);
             } else {
@@ -59,12 +76,14 @@ function LoadPerformanceTest() {
                     message.push('average page First Paint (ms)' + (state.firstPaint / state.loadCount))
                 }
                 message.push('average page First Contentful Paint (ms)' + (state.firstContentfulPaint / state.loadCount))
-                localStorage.setItem('LoadPerformanceTest', 'false')
-                chrome.storage.local.set({Performance: state});
                 message = message.join("\n") + "\n";
+                downloadFileHelper("LoadPerformanceResult.txt", message)
                 console.log(message)
+                localStorage.setItem('LoadPerformanceTest', 'false')
+                chrome.storage.local.set({loadIsRunning: false});
                 state = {}
             }
+
             localStorage.setItem('performanceTesting', JSON.stringify(state));
         }
     }

@@ -2,13 +2,20 @@
   <div class="main_app">
     <el-card>
       <h6>网页性能测试</h6>
-      <el-row>
-        <el-button style="width: 100%" type="success" size="mini" @click="LoadPerformance">页面加载性能测试</el-button>
-      </el-row>
-      <el-row>
-        <el-button style="width: 100%" v-if="!isRunning" type="success" size="mini" @click="RunningPerformance">开始性能收集
+      <el-row v-if="!runningPerformanceIsRunning">
+        <el-button v-if="!loadIsRunning" style="width: 100%" type="success" size="mini" @click="LoadPerformance">
+          页面加载性能测试
         </el-button>
-        <el-button style="width: 100%" v-if="isRunning" type="danger" size="mini" @click="RunningPerformanceResult">
+        <el-button v-else style="width: 100%" type=warning size="mini">
+          页面加载性能测试执行中
+        </el-button>
+      </el-row>
+      <el-row v-if="!loadIsRunning">
+        <el-button style="width: 100%" v-if="!runningPerformanceIsRunning" type="success" size="mini"
+                   @click="RunningPerformance">开始性能收集
+        </el-button>
+        <el-button style="width: 100%" v-if="runningPerformanceIsRunning" type="danger" size="mini"
+                   @click="RunningPerformanceResult">
           终止性能收集
         </el-button>
       </el-row>
@@ -21,51 +28,29 @@
 export default {
   name: 'popupView',
   data() {
-    return {isRunning: false}
+    return {
+      isRunning: false,
+      loadIsRunning: false,
+      runningPerformanceIsRunning: false
+    }
   },
   mounted() {
     chrome.runtime.onMessage.addListener((request) => {
           if (request.msg === "isRunning") {
-            //  To do something
             this.isRunning = request.data
+          }
+          if (request.msg === "loadIsRunning") {
+            this.loadIsRunning = request.data
+          }
+          if (request.msg === "runningPerformanceIsRunning") {
+            this.runningPerformanceIsRunning = request.data
           }
         }
     );
     chrome.storage.onChanged.addListener((changes) => {
       for (let [key, {newValue}] of Object.entries(changes)) {
-        if (key === 'Performance') {
-          let state = newValue
-          let message = []
-          message.push('Performance Testing URL ', state.url)
-          message.push('Performance Testing for ', state.loadCount + ' tests')
-          message.push('average document load time (ms)', (state.documentLoadEventSum / state.loadCount))
-          message.push('average page load time (ms)', (state.loadEventSum / state.loadCount))
-          message.push('average page ready time (ms)', (state.domInteractiveSum / state.loadCount))
-          if (state.lcp > 0) {
-            message.push('average page LCP (ms)', (state.lcp / state.loadCount))
-          }
-          if (state.firstPaint > 0) {
-            message.push('average page First Paint (ms)', (state.firstPaint / state.loadCount))
-          }
-          message.push('average page First Contentful Paint (ms)', (state.firstContentfulPaint / state.loadCount))
-          message = message.join("\n") + "\n";
-
-          // eslint-disable-next-line no-inner-declarations
-          function downloadFileHelper(fileName, content) {
-            const aTag = document.createElement('a');
-            const blob = new Blob([content]);
-            aTag.download = fileName;
-            aTag.style = "display: none";
-            aTag.href = URL.createObjectURL(blob);
-            document.body.appendChild(aTag);
-            aTag.click();
-            setTimeout(function () {
-              document.body.removeChild(aTag);
-              window.URL.revokeObjectURL(blob);
-            }, 100);
-          }
-
-          downloadFileHelper("LoadPerformanceResult.txt", message)
+        if (key === "netWork") {
+          console.log(newValue)
         }
         if (key === "runningPerformance" && newValue === null) {
           chrome.storage.local.get(['totalRunningPerformance'], function (result) {
@@ -282,23 +267,28 @@ export default {
   computed: {},
   methods: {
     LoadPerformance() {
+      chrome.storage.local.set({loadIsRunning: true});
       chrome.tabs.query({active: true, currentWindow: true}, tab => {
         chrome.tabs.sendMessage(tab[0].id, {action: 'LoadPerformance'})
       });
+      this.loadIsRunning = true
     },
     RunningPerformance() {
-      chrome.storage.local.set({totalRunningPerformance: null, runningPerformance: null});
+      chrome.storage.local.set({runningPerformanceIsRunning: true});
       chrome.tabs.query({active: true, currentWindow: true}, tab => {
         chrome.tabs.sendMessage(tab[0].id, {action: 'RunningPerformance'})
         alert("Start Running Performance")
       });
+      this.runningPerformanceIsRunning = true
     },
     RunningPerformanceResult() {
       chrome.tabs.query({active: true, currentWindow: true}, tab => {
         chrome.tabs.sendMessage(tab[0].id, {action: 'StopRunningPerformance'})
         alert("Finish Running Performance")
-        this.isRunning = false
       });
+      this.isRunning = false
+      chrome.storage.local.set({runningPerformanceIsRunning: false});
+      this.runningPerformanceIsRunning = false
     },
   }
 }
