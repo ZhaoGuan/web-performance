@@ -2,7 +2,7 @@
     "manifest_version": 3,
     "name": "web-performance",
     "description": "web性能测试工具",
-    "version": "0.0.2",
+    "version": "0.0.3",
     "background": {
         "service_worker": "background.js"
     },
@@ -10,13 +10,12 @@
         "default_popup": "popup.html"
     },
     "permissions": [
+        "browsingData",
         "storage",
         "tabs",
         "scripting",
         "activeTab",
-        "enterprise",
-        "system.storage",
-        "browsingData"
+        "enterprise"
     ],
     "host_permissions": [
         "*://*/*"

@@ -1,28 +1,47 @@
 // eslint-disable-next-line no-unused-vars
-var url = null
+var loadIsRunning = false
+var runningPerformanceIsRunning = false
 
+chrome.devtools.network.onRequestFinished.addListener(
+    (request) => {
+        if (!Object.keys(request).includes("_fromCache") && request.request.httpVersion !== "chrome-extension") {
+            console.log("Net Work")
+            console.log(request)
+            chrome.storage.local.set({
+                netWork: request
+            });
+        }
+    }
+);
 
 chrome.storage.onChanged.addListener((changes) => {
     for (let [key, {newValue}] of Object.entries(changes)) {
-        if (key === 'runningPerformance' && newValue !== null) {
-            url = newValue.url
+        if (key === 'loadIsRunning' && newValue !== null) {
+            loadIsRunning = newValue
         }
-        if (key === 'runningPerformance' && newValue === null) {
-            url = null
+        if (key === 'runningPerformanceIsRunning' && newValue !== null) {
+            runningPerformanceIsRunning = newValue
         }
     }
 });
 
 function checkRunning() {
-    chrome.tabs.query({active: true, currentWindow: true}, tab => {
-        if (url !== null && (tab.length === 0 || tab[0].url !== url)) {
+    chrome.tabs.query({active: true, currentWindow: true}, () => {
+        try {
+            chrome.runtime.sendMessage(
+                {
+                    msg: "loadIsRunning",
+                    data: loadIsRunning
+                });
             chrome.runtime.sendMessage({
-                msg: "isRunning",
-                data: true
+                msg: "runningPerformanceIsRunning",
+                data: runningPerformanceIsRunning
             });
+            // eslint-disable-next-line no-empty
+        } catch (e) {
+
         }
     });
-
 }
 
-setInterval(checkRunning, 2000)
+setInterval(checkRunning, 500)

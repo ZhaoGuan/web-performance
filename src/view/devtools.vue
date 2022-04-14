@@ -26,10 +26,15 @@ export default {
       fpsData: [],
       jsHeapSizeLimit: [],
       totalJSHeapSize: [],
-      usedJSHeapSize: []
+      usedJSHeapSize: [],
     }
   },
   mounted() {
+    chrome.devtools.network.onRequestFinished.addListener(
+        (request) => {
+          console.log(request)
+        }
+    );
     chrome.storage.onChanged.addListener((changes) => {
       for (let [key, {newValue}] of Object.entries(changes)) {
         if (key === "totalRunningPerformance" && newValue !== null) {
@@ -37,8 +42,12 @@ export default {
         }
       }
     });
-    this.fpsChart()
-    this.memoryChart()
+    try {
+      this.fpsChart()
+      this.memoryChart()
+      // eslint-disable-next-line no-empty
+    } catch (e) {
+    }
   },
   watch: {
     chartData: {
@@ -62,8 +71,14 @@ export default {
           this.totalJSHeapSize.push(temp.memory.totalJSHeapSize / 1024 / 1024)
           this.usedJSHeapSize.push(temp.memory.usedJSHeapSize / 1024 / 1024)
         }
-        this.fpsChart()
-        this.memoryChart()
+        try {
+          this.fpsChart()
+          this.memoryChart()
+          // eslint-disable-next-line no-empty
+        } catch (e) {
+
+        }
+
       },
       immediate: true,
       deep: true
@@ -184,5 +199,7 @@ export default {
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
+  width: 100%;
+  height: 100%;
 }
 </style>
