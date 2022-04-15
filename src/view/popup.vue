@@ -35,6 +35,7 @@ export default {
     }
   },
   mounted() {
+    console.log(chrome.browsingData)
     chrome.storage.local.get(["loadIsRunning"], (result) => {
       this.loadIsRunning = !!result.loadIsRunning;
     })
@@ -256,6 +257,26 @@ export default {
         }
         if (key === "runningPerformanceIsRunning" && newValue !== null) {
           this.runningPerformanceIsRunning = newValue
+        }
+        if (key === "reload" && newValue !== null) {
+          console.log(newValue)
+          chrome.tabs.query({active: true, currentWindow: true}, tab => {
+            console.log(tab[0])
+            chrome.browsingData.remove({
+              "origins": ['https://developer.chrome.com']
+            }, {
+              "appcache": true,
+              "cache": true,
+              "cacheStorage": true,
+              // "cookies": true,
+              "fileSystems": true,
+              // "indexedDB": true,
+              // "localStorage": true,
+              // "serviceWorkers": true,
+              // "webSQL": true
+            }, () => {
+            });
+          });
         }
         this.isRunning = (key === 'runningPerformance' || key === 'totalRunningPerformance') && newValue !== null
       }

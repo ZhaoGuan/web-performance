@@ -1,3 +1,13 @@
+//https://github.com/GoogleChrome/web-vitals
+// 因为使用npm所以通过 pop.js 引入
+import {getLCP, getFID, getCLS, getFCP, getTTFB} from './popup';
+
+getCLS(console.log);
+getFID(console.log);
+getLCP(console.log);
+getFCP(console.log);
+getTTFB(console.log);
+
 function downloadFileHelper(fileName, content) {
     const aTag = document.createElement('a');
     const blob = new Blob([content]);
@@ -12,6 +22,11 @@ function downloadFileHelper(fileName, content) {
     }, 100);
 }
 
+function webReload() {
+    // const time = new Date()
+    // chrome.storage.local.set({reload: time.getTime(), url: location.href});
+    location.reload();
+}
 
 function LoadPerformanceTest() {
     var maxReloads = 10;
@@ -34,18 +49,18 @@ function LoadPerformanceTest() {
         state.loadEventSum += (performance.timing.loadEventStart - performance.timing.requestStart);
         state.domInteractiveSum += (performance.timing.domInteractive - performance.timing.requestStart);
         state.documentLoadEventSum += (performance.timing.responseEnd - performance.timing.requestStart);
-        try {
-            const po = new PerformanceObserver((entryList) => {
-                const entries = entryList.getEntries();
-                const lastEntry = entries[entries.length - 1]; // 优先取 renderTime，如果没有则取 loadTime
-                let lcp = lastEntry.renderTime || lastEntry.loadTime;
-                state.lcp += lcp
-                console.log(`Largest Contentful Paint ${lcp}`)
-            });
-            po.observe({type: 'largest-contentful-paint'});
-            // eslint-disable-next-line no-empty
-        } catch (e) {
-        }
+        // try {
+        //     const po = new PerformanceObserver((entryList) => {
+        //         const entries = entryList.getEntries();
+        //         const lastEntry = entries[entries.length - 1]; // 优先取 renderTime，如果没有则取 loadTime
+        //         let lcp = lastEntry.renderTime || lastEntry.loadTime;
+        //         state.lcp += lcp
+        //         console.log(`Largest Contentful Paint ${lcp}`)
+        //     });
+        //     po.observe({type: 'largest-contentful-paint'});
+        //     // eslint-disable-next-line no-empty
+        // } catch (e) {
+        // }
         let performanceEntries = performance.getEntriesByType('paint') || [];
         performanceEntries.forEach((entry) => {
             if (entry.name === 'first-Paint') {
@@ -58,9 +73,7 @@ function LoadPerformanceTest() {
         if (localStorage.getItem("LoadPerformanceTest") === 'true') {
             if (state.loadCount < maxReloads) {
                 setTimeout(function () {
-                    const time = new Date()
-                    chrome.storage.local.set({reload: time});
-                    location.reload();
+                    webReload()
                 }, 1);
             } else {
                 let message = []
@@ -200,7 +213,7 @@ var doLoadPerformanceTest = doLoadPerformanceTest || (() => {
             localStorage.setItem('LoadPerformanceTest', 'true')
             localStorage.setItem('loadIsRunning', 'true')
             // 重新载入页面
-            location.reload()
+            webReload()
         }
         // 执行运行中性能
         if (request.action === 'RunningPerformance') {
@@ -220,3 +233,33 @@ var doLoadPerformanceTest = doLoadPerformanceTest || (() => {
         }
     })
 })();
+
+var getLcp = getLcp || (() => {
+    // 原内容 https://web.dev/lcp/
+    // Create a variable to hold the latest LCP value (since it can change).
+    let lcp;
+    // Create the PerformanceObserver instance.
+    const po = new PerformanceObserver((entryList) => {
+        const entries = entryList.getEntries();
+        const lastEntry = entries[entries.length - 1];
+
+        // Update `lcp` to the latest value, using `renderTime` if it's available,
+        // otherwise using `loadTime`. (Note: `renderTime` may not be available if
+        // the element is an image and it's loaded cross-origin without the
+        // `Timing-Allow-Origin` header.)
+        lcp = lastEntry.renderTime || lastEntry.loadTime;
+    });
+
+    // Observe entries of type `largest-contentful-paint`, including buffered
+    // entries, i.e. entries that occurred before calling `observe()`.
+    po.observe({type: 'largest-contentful-paint', buffered: true});
+
+    // Send the latest LCP value to your analytics server once the user
+    // leaves the tab.
+    addEventListener('visibilitychange', function fn() {
+        if (lcp && document.visibilityState === 'hidden') {
+            console.log('LCP:', lcp);
+            removeEventListener('visibilitychange', fn, true);
+        }
+    }, true);
+})()
