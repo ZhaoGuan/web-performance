@@ -1,6 +1,6 @@
 //https://github.com/GoogleChrome/web-vitals
 // 因为使用npm所以通过 pop.js 引入
-import {getLCP, getFID, getCLS, getFCP, getTTFB} from './popup';
+import {getLCP, getFID, getCLS, getFCP, getTTFB} from './import';
 
 getCLS(console.log);
 getFID(console.log);
