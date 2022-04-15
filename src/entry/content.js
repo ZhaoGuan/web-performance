@@ -1,6 +1,6 @@
 //https://github.com/GoogleChrome/web-vitals
 // 因为使用npm所以通过 pop.js 引入
-import {getLCP, getFID, getCLS, getFCP, getTTFB} from './popup';
+import {getLCP, getFID, getCLS, getFCP, getTTFB, sideex} from './popup';
 
 getCLS(console.log);
 getFID(console.log);
@@ -194,6 +194,7 @@ window.addEventListener("setItemEvent", function (event) {
         chrome.storage.local.set({loadIsRunning: false});
     }
 });
+
 window.onclose = function () {
     localStorage.setItem('RunningPerformanceTest', 'false');
     chrome.storage.local.get(['totalRunningPerformance'], function () {
@@ -204,8 +205,10 @@ window.onclose = function () {
         });
     })
 }
-var doLoadPerformanceTest = doLoadPerformanceTest || (() => {
+
+var run = run || (() => {
     chrome.runtime.onMessage.addListener(request => {
+        // 启动性能测试
         if (request.action === 'LoadPerformance') {
             // 清空数据
             localStorage.setItem('performanceTesting', JSON.stringify({}));
@@ -230,6 +233,10 @@ var doLoadPerformanceTest = doLoadPerformanceTest || (() => {
                     runningPerformanceUrl: null
                 });
             })
+        }
+        // 开启UI录制
+        if (request.action === '') {
+
         }
     })
 })();
