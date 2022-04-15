@@ -19,6 +19,14 @@
           终止性能收集
         </el-button>
       </el-row>
+      <el-row v-if="!runningPerformanceIsRunning&&!loadIsRunning">
+        <el-row>
+          <el-button style="width: 100%" type="success" size="mini" @click="RunUIRecord">开始录制</el-button>
+        </el-row>
+        <el-row>
+          <el-button style="width: 100%" type="danger" size="mini" @click="StopRunUIRecord">暂停录制</el-button>
+        </el-row>
+      </el-row>
     </el-card>
   </div>
 </template>
@@ -288,6 +296,18 @@ export default {
       chrome.storage.local.set({runningPerformanceIsRunning: false});
       this.runningPerformanceIsRunning = false
     },
+    RunUIRecord() {
+      chrome.tabs.query({active: true, currentWindow: true}, tab => {
+        chrome.tabs.sendMessage(tab[0].id, {action: 'RunUIRecord', data: true})
+        alert("Start UI Record")
+      });
+    },
+    StopRunUIRecord() {
+      chrome.tabs.query({active: true, currentWindow: true}, tab => {
+        chrome.tabs.sendMessage(tab[0].id, {action: 'RunUIRecord', data: false})
+        alert("Stop UI Record")
+      });
+    }
   }
 }
 </script>

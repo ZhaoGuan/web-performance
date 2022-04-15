@@ -1,6 +1,8 @@
 //https://github.com/GoogleChrome/web-vitals
 // 因为使用npm所以通过 pop.js 引入
-import {getLCP, getFID, getCLS, getFCP, getTTFB, sideex} from './popup';
+import {getLCP, getFID, getCLS, getFCP, getTTFB, SideeX} from './import';
+
+var sideex = new SideeX();
 
 getCLS(console.log);
 getFID(console.log);
@@ -235,7 +237,16 @@ var run = run || (() => {
             })
         }
         // 开启UI录制
-        if (request.action === '') {
+        if (request.action === 'RunUIRecord') {
+            console.log(request)
+            if (request.data) {
+                sideex.recorder.start()
+            } else {
+                sideex.recorder.stop()
+                let jsonString = sideex.file.testSuite.save()
+                console.log(jsonString)
+                sideex.playback.start()
+            }
 
         }
     })
