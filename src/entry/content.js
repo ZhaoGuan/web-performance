@@ -2,7 +2,7 @@
 // 因为使用npm所以通过 pop.js 引入
 import {getLCP, getFID, getCLS, getFCP, getTTFB, SideeX} from './import';
 
-var sideex = new SideeX();
+let sideex = null
 
 getCLS(console.log);
 getFID(console.log);
@@ -237,17 +237,24 @@ var run = run || (() => {
             })
         }
         // 开启UI录制
-        if (request.action === 'RunUIRecord') {
+        if (request.action === 'runUIRecord') {
             console.log(request)
             if (request.data) {
+                sideex = new SideeX()
                 sideex.recorder.start()
             } else {
                 sideex.recorder.stop()
                 let jsonString = sideex.file.testSuite.save()
-                console.log(jsonString)
-                sideex.playback.start()
+                if (Object(JSON.parse(jsonString).suites[0].cases[0].records).length > 0) {
+                    chrome.storage.local.set({UIRecordResult: jsonString});
+                }
             }
-
+        }
+        // 回放
+        if (request.action === 'playBack') {
+            sideex = new SideeX()
+            sideex.file.testSuite.load(request.data);
+            sideex.playback.start();
         }
     })
 })();

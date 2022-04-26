@@ -1,16 +1,18 @@
 <template>
   <div class="main_app">
     <el-card>
-      <h6>网页性能测试</h6>
-      <el-row v-if="!runningPerformanceIsRunning">
-        <el-button v-if="!loadIsRunning" style="width: 100%" type="success" size="mini" @click="LoadPerformance">
-          页面加载性能测试
-        </el-button>
-        <el-button v-else style="width: 100%" type=warning size="mini">
-          页面加载性能测试执行中
-        </el-button>
+      <el-row v-if="!runningPerformanceIsRunning&&!runUIRecordIsRunning">
+        <el-row>
+          <h6>网页性能测试</h6>
+          <el-button v-if="!loadIsRunning" style="width: 100%" type="success" size="mini" @click="LoadPerformance">
+            页面加载性能测试
+          </el-button>
+          <el-button v-else style="width: 100%" type=warning size="mini">
+            页面加载性能测试执行中
+          </el-button>
+        </el-row>
       </el-row>
-      <el-row v-if="!loadIsRunning">
+      <el-row v-if="!loadIsRunning&&!runUIRecordIsRunning">
         <el-button style="width: 100%" v-if="!runningPerformanceIsRunning" type="success" size="mini"
                    @click="RunningPerformance">开始性能收集
         </el-button>
@@ -20,11 +22,26 @@
         </el-button>
       </el-row>
       <el-row v-if="!runningPerformanceIsRunning&&!loadIsRunning">
+        <h6>网页UI动作录制</h6>
         <el-row>
-          <el-button style="width: 100%" type="success" size="mini" @click="RunUIRecord">开始录制</el-button>
-        </el-row>
-        <el-row>
-          <el-button style="width: 100%" type="danger" size="mini" @click="StopRunUIRecord">暂停录制</el-button>
+          <el-row v-if="!runUIRecordIsRunning">
+            <el-row>
+              <el-tooltip class="item" effect="dark" content="只支持不跳转页面web进行点击操作" placement="top">
+                <el-button style="width: 100%" type="success" size="mini" @click="runUIRecord">开始动作录制</el-button>
+              </el-tooltip>
+            </el-row>
+            <el-row v-if="UIRecordResult!==null">
+              <el-row>
+                <el-button style="width: 100%" type="warning" size="mini" @click="UIPlayBack">动作回放</el-button>
+              </el-row>
+              <el-row>
+                <el-button style="width: 100%" type="danger" size="mini" @click="clearPlayBack">清空录制</el-button>
+              </el-row>
+            </el-row>
+          </el-row>
+          <el-row v-else>
+            <el-button style="width: 100%" type="danger" size="mini" @click="StopRunUIRecord">暂停动作录制</el-button>
+          </el-row>
         </el-row>
       </el-row>
     </el-card>
@@ -39,16 +56,24 @@ export default {
     return {
       isRunning: false,
       loadIsRunning: false,
-      runningPerformanceIsRunning: false
+      runningPerformanceIsRunning: false,
+      runUIRecordIsRunning: false,
+      UIRecordResult: null
     }
   },
   mounted() {
-    console.log(chrome.browsingData)
     chrome.storage.local.get(["loadIsRunning"], (result) => {
       this.loadIsRunning = !!result.loadIsRunning;
     })
     chrome.storage.local.get(["runningPerformanceIsRunning"], (result) => {
       this.runningPerformanceIsRunning = !!result.runningPerformanceIsRunning;
+    })
+    chrome.storage.local.get(["runUIRecord"], (result) => {
+      this.runUIRecordIsRunning = !!result.runUIRecord;
+    })
+    chrome.storage.local.get(["UIRecordResult"], (result) => {
+      console.log(result)
+      this.UIRecordResult = result.UIRecordResult;
     })
     chrome.storage.onChanged.addListener((changes) => {
       for (let [key, {newValue}] of Object.entries(changes)) {
@@ -266,6 +291,9 @@ export default {
         if (key === "runningPerformanceIsRunning" && newValue !== null) {
           this.runningPerformanceIsRunning = newValue
         }
+        if (key === "UIRecordResult" && newValue !== null) {
+          this.UIRecordResult = newValue
+        }
         this.isRunning = (key === 'runningPerformance' || key === 'totalRunningPerformance') && newValue !== null
       }
     });
@@ -296,17 +324,31 @@ export default {
       chrome.storage.local.set({runningPerformanceIsRunning: false});
       this.runningPerformanceIsRunning = false
     },
-    RunUIRecord() {
+    runUIRecord() {
+      chrome.storage.local.set({runUIRecord: true});
       chrome.tabs.query({active: true, currentWindow: true}, tab => {
-        chrome.tabs.sendMessage(tab[0].id, {action: 'RunUIRecord', data: true})
+        chrome.tabs.sendMessage(tab[0].id, {action: 'runUIRecord', data: true})
         alert("Start UI Record")
       });
+      this.runUIRecordIsRunning = true
     },
     StopRunUIRecord() {
+      chrome.storage.local.set({runUIRecord: false});
       chrome.tabs.query({active: true, currentWindow: true}, tab => {
-        chrome.tabs.sendMessage(tab[0].id, {action: 'RunUIRecord', data: false})
+        chrome.tabs.sendMessage(tab[0].id, {action: 'runUIRecord', data: false})
         alert("Stop UI Record")
       });
+      this.runUIRecordIsRunning = false
+    },
+    UIPlayBack() {
+      chrome.tabs.query({active: true, currentWindow: true}, tab => {
+        chrome.tabs.sendMessage(tab[0].id, {action: 'playBack', data: this.UIRecordResult})
+        // alert("Start Play Back")
+      });
+    },
+    clearPlayBack() {
+      this.UIRecordResult = null
+      chrome.storage.local.set({UIRecordResult: null});
     }
   }
 }

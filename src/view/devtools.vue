@@ -1,16 +1,21 @@
 <template>
   <div class="main_app">
-    <h1>性能曲线图</h1>
-    <el-row>
-      <p style="text-align: left"><code>数据量: {{ fpsData.length }}</code></p>
-    </el-row>
-    <el-row v-if="chartData.length>0">
-      <p style="text-align: left"><code>URL: {{ chartData[0].url }}</code></p>
-    </el-row>
-    <el-row>
-      <div id="fps" style="width: 100%;height: 300px"></div>
-      <div id="memory" style="width: 100%;height: 300px"></div>
-    </el-row>
+    <el-tabs v-model="activeName" @tab-click="handleClick">
+      <el-tab-pane label="实时性能" name="performance">
+        <h1>性能曲线图</h1>
+        <el-row>
+          <p style="text-align: left"><code>数据量: {{ fpsData.length }}</code></p>
+        </el-row>
+        <el-row v-if="chartData.length>0">
+          <p style="text-align: left"><code>URL: {{ chartData[0].url }}</code></p>
+        </el-row>
+        <el-row>
+          <div id="fps" style="width: 100%;height: 300px"></div>
+          <div id="memory" style="width: 100%;height: 300px"></div>
+        </el-row>
+      </el-tab-pane>
+    </el-tabs>
+
   </div>
 </template>
 
@@ -27,6 +32,7 @@ export default {
       jsHeapSizeLimit: [],
       totalJSHeapSize: [],
       usedJSHeapSize: [],
+      activeName: 'performance'
     }
   },
   mounted() {
@@ -186,6 +192,9 @@ export default {
         ]
       };
       myChart.setOption(option);
+    },
+    handleClick() {
+
     }
   }
 }
